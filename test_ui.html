@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LLM Framework — Test UI</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #242736;
+    --border: #2e3147;
+    --accent: #7c6ee6;
+    --accent2: #5dade2;
+    --green: #27ae60;
+    --red: #e74c3c;
+    --yellow: #f39c12;
+    --text: #e8e9f0;
+    --text2: #9da3c2;
+    --text3: #6b7196;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 { font-size: 16px; font-weight: 600; color: var(--accent); letter-spacing: 0.02em; }
+  header .subtitle { color: var(--text3); font-size: 12px; }
+  .server-bar {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .server-bar label { color: var(--text3); font-size: 12px; }
+  .server-bar input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 5px 10px;
+    width: 220px;
+    outline: none;
+  }
+  .server-bar input:focus { border-color: var(--accent); }
+  #status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--text3);
+    transition: background 0.3s;
+  }
+  #status-dot.ok    { background: var(--green); }
+  #status-dot.error { background: var(--red); }
+
+  /* ── Layout ── */
+  main { max-width: 900px; margin: 0 auto; padding: 32px 24px; display: flex; flex-direction: column; gap: 32px; }
+
+  /* ── Section card ── */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .method-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .method-GET    { background: #1a3d2e; color: #27ae60; }
+  .method-POST   { background: #1e2d4a; color: #5dade2; }
+  .method-DELETE { background: #3d1a1a; color: #e74c3c; }
+
+  .section-title-group { flex: 1; }
+  .section-path { font-family: var(--mono); font-size: 13px; color: var(--text); font-weight: 600; }
+  .section-desc { color: var(--text3); font-size: 12px; margin-top: 2px; }
+
+  .section-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+  /* ── Explanation box ── */
+  .explainer {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .explainer-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+  .explainer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .explainer-item { display: flex; flex-direction: column; gap: 2px; }
+  .explainer-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+  .explainer-value { font-size: 12px; color: var(--text2); line-height: 1.4; }
+  .explainer-value .tag {
+    display: inline-block;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0 5px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent2);
+  }
+
+  /* ── Form elements ── */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; color: var(--text2); font-weight: 500; }
+  .field small { font-size: 11px; color: var(--text3); }
+
+  input[type="text"], input[type="number"], textarea, select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 12px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  textarea { min-height: 90px; }
+  textarea.mono { font-family: var(--mono); font-size: 12px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  /* ── Message builder (for /chat) ── */
+  .messages-list { display: flex; flex-direction: column; gap: 8px; }
+  .msg-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .msg-row select { width: 110px; flex-shrink: 0; }
+  .msg-row textarea { flex: 1; min-height: 50px; }
+  .msg-row button.remove-msg {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 8px 10px;
+    flex-shrink: 0;
+  }
+  .msg-row button.remove-msg:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── Buttons ── */
+  .btn {
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 18px;
+    transition: opacity 0.15s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-secondary { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--text); }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-danger:hover { opacity: 0.85; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* ── File drop zone ── */
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    color: var(--text3);
+    font-size: 13px;
+  }
+  .dropzone:hover, .dropzone.dragover { border-color: var(--accent); background: rgba(124,110,230,0.05); color: var(--text2); }
+  .dropzone .drop-icon { font-size: 28px; margin-bottom: 8px; }
+  .dropzone .drop-sub { font-size: 11px; margin-top: 4px; color: var(--text3); }
+  .dropzone input[type="file"] { display: none; }
+  #file-name { font-family: var(--mono); font-size: 12px; color: var(--accent2); margin-top: 4px; }
+
+  /* ── Response box ── */
+  .response-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .response-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text3);
+  }
+  .response-status { display: flex; align-items: center; gap: 6px; }
+  .response-status .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--text3);
+  }
+  .response-status .dot.ok    { background: var(--green); }
+  .response-status .dot.error { background: var(--red); }
+  .response-time { font-family: var(--mono); }
+
+  .response-body {
+    padding: 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 380px;
+    overflow-y: auto;
+    min-height: 60px;
+  }
+  .response-body.placeholder { color: var(--text3); font-style: italic; font-family: inherit; }
+
+  /* ── Doc tracker ── */
+  .doc-tracker {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .doc-tracker-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+  .doc-list { display: flex; flex-direction: column; gap: 6px; }
+  .doc-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 6px 10px;
+  }
+  .doc-item .doc-id { flex: 1; color: var(--accent2); }
+  .doc-item .doc-src { color: var(--text3); }
+  .doc-item button {
+    background: transparent;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 2px;
+  }
+  .doc-item button:hover { color: var(--red); }
+  .doc-empty { color: var(--text3); font-size: 12px; font-style: italic; }
+
+  /* ── Sources display ── */
+  .sources-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .source-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  .source-meta {
+    display: flex;
+    gap: 12px;
+    color: var(--text3);
+    font-size: 11px;
+    font-family: var(--mono);
+    margin-bottom: 6px;
+  }
+  .source-meta .score { color: var(--accent); }
+  .source-content { color: var(--text2); line-height: 1.5; }
+
+  /* ── Spinner ── */
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 4px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Divider ── */
+  .divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--text);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 999;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>LLM Framework — Test UI</h1>
+    <div class="subtitle">Test all API endpoints interactively</div>
+  </div>
+  <div class="server-bar">
+    <div id="status-dot"></div>
+    <label for="server-url">Server:</label>
+    <input id="server-url" type="text" value="http://localhost:8000" />
+    <button class="btn btn-secondary btn-sm" onclick="checkHealth()">Ping</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ═══════════════════════════════════════════
+       1. HEALTH CHECK
+  ══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="method-badge method-GET">GET</span>
+      <div class="section-title-group">
+        <div class="section-path">/health</div>
+        <div class="section-desc">Check that the FastAPI server is running</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <div class="explainer">
+        <div class="explainer-title">How it works</div>
+        <div class="explainer-grid">
+          <div class="explainer-item">
+            <span class="explainer-label">What it does</span>
+            <span class="explainer-value">Returns <span class="tag">{"status":"ok"}</span> — just confirms the server is alive and reachable.</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">AI Used</span>
+            <span class="explainer-value">None — no AI calls happen here.</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">Where data goes</span>
+            <span class="explainer-value">Nowhere. It's a simple ping.</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">You decide</span>
+            <span class="explainer-value">Nothing — hit the button, see the response.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="doHealth()">▶ Send Request</button>
+      </div>
+
+      <div class="response-box">
+        <div class="response-header">
+          <div class="response-status" id="health-status">
+            <div class="dot"></div><span>No response yet</span>
+          </div>
+          <span class="response-time" id="health-time"></span>
+        </div>
+        <div class="response-body placeholder" id="health-resp">Hit "Send Request" to see the response here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       2. DIRECT CHAT
+  ══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="method-badge method-POST">POST</span>
+      <div class="section-title-group">
+        <div class="section-path">/chat</div>
+        <div class="section-desc">Send messages directly to Claude (no RAG, no document lookup)</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <div class="explainer">
+        <div class="explainer-title">How it works</div>
+        <div class="explainer-grid">
+          <div class="explainer-item">
+            <span class="explainer-label">What it does</span>
+            <span class="explainer-value">Sends your message list straight to the LLM and returns its answer. No documents or chunks are involved — just you and the AI.</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">AI Used</span>
+            <span class="explainer-value">Claude (via AnthropicProvider). You can override the model name below.</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">Where data goes</span>
+            <span class="explainer-value">Only to Anthropic's API — nothing is stored locally.</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">You decide</span>
+            <span class="explainer-value">The role of each message (system / user / assistant) and optionally a different model name.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Messages <small>(add as many turns as you like — order matters)</small></label>
+        <div class="messages-list" id="chat-messages">
+          <div class="msg-row">
+            <select>
+              <option value="system">system</option>
+              <option value="user" selected>user</option>
+              <option value="assistant">assistant</option>
+            </select>
+            <textarea placeholder="You are a helpful assistant.&#10;&#10;— or just type your user message here."></textarea>
+            <button class="remove-msg" onclick="removeMsgRow(this)" title="Remove">×</button>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" style="align-self:flex-start;margin-top:6px" onclick="addMsgRow()">+ Add message</button>
+      </div>
+
+      <div class="form-row">
+        <div class="field">
+          <label>Model override <small>(optional)</small></label>
+          <input type="text" id="chat-model" placeholder="e.g. claude-opus-4-8" />
+        </div>
+        <div class="field">
+          <label>Session ID <small>(auto-filled — keep to continue conversation)</small></label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="chat-session" placeholder="Auto-filled after first message" style="font-family:var(--mono);font-size:11px" />
+            <button class="btn btn-secondary btn-sm" onclick="clearSession()" title="Start new conversation">New</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;margin-top:-4px">
+        <input type="checkbox" id="chat-stream" style="width:auto;accent-color:var(--accent)" />
+        <label for="chat-stream" style="font-size:12px;color:var(--text2);cursor:pointer">Stream response (words appear as Claude generates them)</label>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="doChat()">▶ Send</button>
+        <button class="btn btn-secondary btn-sm" onclick="resetChat()">Reset</button>
+      </div>
+
+      <div class="response-box">
+        <div class="response-header">
+          <div class="response-status" id="chat-status"><div class="dot"></div><span>No response yet</span></div>
+          <span class="response-time" id="chat-time"></span>
+        </div>
+        <div class="response-body placeholder" id="chat-resp">Response will appear here. Enable Stream to see words appear live.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       3. INGEST TEXT
+  ══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="method-badge method-POST">POST</span>
+      <div class="section-title-group">
+        <div class="section-path">/ingest</div>
+        <div class="section-desc">Store a piece of text in the RAG knowledge base</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <div class="explainer">
+        <div class="explainer-title">How it works — 4 steps happen automatically</div>
+        <div class="explainer-grid">
+          <div class="explainer-item">
+            <span class="explainer-label">Step 1 — Chunking</span>
+            <span class="explainer-value">TextChunker splits your text into overlapping pieces (~1000 chars each, 200-char overlap) so large documents don't exceed LLM limits.</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">Step 2 — Embeddings (OpenAI)</span>
+            <span class="explainer-value">Each chunk is sent to <strong>OpenAI's embedding API</strong>, which converts it to a list of 1536 numbers (a vector). This is how semantic search works.</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">Step 3 — Storage (ChromaDB)</span>
+            <span class="explainer-value">Chunks + their vectors are saved to <strong>ChromaDB on local disk</strong>. They persist until you delete them.</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">Step 4 — Response</span>
+            <span class="explainer-value">Returns a <span class="tag">document_id</span> (UUID). Save it! You need it to delete the document later.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Content <small>(the text to store)</small></label>
+        <textarea class="mono" id="ingest-content" rows="6" placeholder="Paste your text here. For example:&#10;&#10;The Eiffel Tower is a wrought-iron lattice tower on the Champ de Mars in Paris, France. It was constructed from 1887 to 1889 as the centrepiece of the 1889 World's Fair..."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="field">
+          <label>Source <small>(optional label, e.g. filename)</small></label>
+          <input type="text" id="ingest-source" placeholder="e.g. paris_guide.txt" />
+        </div>
+        <div class="field">
+          <label>Metadata <small>(optional JSON)</small></label>
+          <input type="text" id="ingest-meta" placeholder='{"author": "Alice"}' />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="doIngest()">▶ Ingest Text</button>
+      </div>
+
+      <div class="response-box">
+        <div class="response-header">
+          <div class="response-status" id="ingest-status"><div class="dot"></div><span>No response yet</span></div>
+          <span class="response-time" id="ingest-time"></span>
+        </div>
+        <div class="response-body placeholder" id="ingest-resp">document_id will appear here — copy it to delete later.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       4. INGEST FILE
+  ══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="method-badge method-POST">POST</span>
+      <div class="section-title-group">
+        <div class="section-path">/ingest/file</div>
+        <div class="section-desc">Upload a .txt or .pdf file into the RAG knowledge base</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <div class="explainer">
+        <div class="explainer-title">How it works</div>
+        <div class="explainer-grid">
+          <div class="explainer-item">
+            <span class="explainer-label">What it does</span>
+            <span class="explainer-value">Same as /ingest above, but accepts a file upload instead of raw text. The server saves it to a temp path, reads it (uses pypdf for PDFs), then runs the same chunk → embed → store pipeline.</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">AI Used</span>
+            <span class="explainer-value">OpenAI Embeddings API (to vectorize the chunks).</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">Where data goes</span>
+            <span class="explainer-value">Temp file is deleted after ingestion. Chunks land in ChromaDB on disk. Source is set to the original filename.</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">You decide</span>
+            <span class="explainer-value">Which file to upload (.txt or .pdf only).</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+        <div class="drop-icon">📄</div>
+        <div>Click to choose a file, or drag &amp; drop it here</div>
+        <div class="drop-sub">Supports .txt and .pdf</div>
+        <input type="file" id="file-input" accept=".txt,.pdf" onchange="onFileSelect(event)" />
+      </div>
+      <div id="file-name"></div>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="upload-btn" onclick="doIngestFile()" disabled>▶ Upload &amp; Ingest</button>
+      </div>
+
+      <div class="response-box">
+        <div class="response-header">
+          <div class="response-status" id="file-status"><div class="dot"></div><span>No response yet</span></div>
+          <span class="response-time" id="file-time"></span>
+        </div>
+        <div class="response-body placeholder" id="file-resp">document_id and filename will appear here.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       5. RAG QUERY
+  ══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="method-badge method-POST">POST</span>
+      <div class="section-title-group">
+        <div class="section-path">/query</div>
+        <div class="section-desc">Ask a question — Claude answers using your stored documents</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <div class="explainer">
+        <div class="explainer-title">How it works — the full RAG pipeline</div>
+        <div class="explainer-grid">
+          <div class="explainer-item">
+            <span class="explainer-label">Step 1 — Embed question (OpenAI)</span>
+            <span class="explainer-value">Your question is converted to a vector using OpenAI Embeddings — same space as the stored chunks.</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">Step 2 — Search (ChromaDB)</span>
+            <span class="explainer-value">Finds the top-k chunks most semantically similar to your question using cosine similarity.</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">Step 3 — Build prompt</span>
+            <span class="explainer-value">Those chunks are stuffed into a prompt as "context" alongside your question.</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">Step 4 — Answer (Claude)</span>
+            <span class="explainer-value">Claude reads the context and writes an answer. The response includes which chunks were used (sources) and token counts.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Question</label>
+        <textarea id="query-q" rows="3" placeholder="Ask something about your ingested documents, e.g: What is the Eiffel Tower?"></textarea>
+      </div>
+
+      <div class="field" style="max-width:200px">
+        <label>k — chunks to retrieve <small>(1–20)</small></label>
+        <input type="number" id="query-k" value="5" min="1" max="20" />
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="doQuery()">▶ Ask</button>
+      </div>
+
+      <div class="response-box">
+        <div class="response-header">
+          <div class="response-status" id="query-status"><div class="dot"></div><span>No response yet</span></div>
+          <span class="response-time" id="query-time"></span>
+        </div>
+        <div class="response-body placeholder" id="query-resp">The AI answer + source chunks will appear here.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       6. DELETE DOCUMENT
+  ══════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="method-badge method-DELETE">DELETE</span>
+      <div class="section-title-group">
+        <div class="section-path">/documents/{id}</div>
+        <div class="section-desc">Remove all chunks of a document from ChromaDB</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <div class="explainer">
+        <div class="explainer-title">How it works</div>
+        <div class="explainer-grid">
+          <div class="explainer-item">
+            <span class="explainer-label">What it does</span>
+            <span class="explainer-value">Finds all chunks in ChromaDB whose metadata matches the given document_id and deletes them. After this, the document can no longer be found in queries.</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">AI Used</span>
+            <span class="explainer-value">None — pure database operation.</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">Where data goes</span>
+            <span class="explainer-value">Permanently removed from ChromaDB on disk.</span>
+          </div>
+          <div class="explainer-item">
+            <span class="explainer-label">You decide</span>
+            <span class="explainer-value">The document_id from a previous /ingest response. Use the tracker below.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Document tracker -->
+      <div class="doc-tracker">
+        <div class="doc-tracker-title">Ingested Documents (this session)</div>
+        <div class="doc-list" id="doc-list">
+          <div class="doc-empty" id="doc-empty">No documents ingested yet.</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Document ID <small>(paste or click a document above to fill)</small></label>
+        <input type="text" id="delete-id" placeholder="e.g. 3f8a1c9d-..." />
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-danger" onclick="doDelete()">▶ Delete Document</button>
+      </div>
+
+      <div class="response-box">
+        <div class="response-header">
+          <div class="response-status" id="delete-status"><div class="dot"></div><span>No response yet</span></div>
+          <span class="response-time" id="delete-time"></span>
+        </div>
+        <div class="response-body placeholder" id="delete-resp">Confirmation will appear here.</div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+/* ────────────────────────────────────────
+   Utilities
+──────────────────────────────────────── */
+function serverUrl() {
+  return document.getElementById('server-url').value.replace(/\/$/, '');
+}
+
+async function apiFetch(method, path, body, isForm) {
+  const t0 = Date.now();
+  const opts = { method };
+  if (isForm) {
+    opts.body = body;
+  } else if (body) {
+    opts.headers = { 'Content-Type': 'application/json' };
+    opts.body = JSON.stringify(body);
+  }
+  const res = await fetch(serverUrl() + path, opts);
+  const ms = Date.now() - t0;
+  let data;
+  try { data = await res.json(); } catch { data = { error: 'Non-JSON response' }; }
+  return { ok: res.ok, status: res.status, data, ms };
+}
+
+function setResponse(prefix, result) {
+  const statusEl = document.getElementById(prefix + '-status');
+  const timeEl   = document.getElementById(prefix + '-time');
+  const respEl   = document.getElementById(prefix + '-resp');
+
+  const dot = statusEl.querySelector('.dot');
+  const txt = statusEl.querySelector('span');
+  dot.className = 'dot ' + (result.ok ? 'ok' : 'error');
+  txt.textContent = result.ok ? `${result.status} OK` : `${result.status} Error`;
+  timeEl.textContent = `${result.ms}ms`;
+  respEl.className = 'response-body';
+  respEl.textContent = JSON.stringify(result.data, null, 2);
+}
+
+function setLoading(prefix, on) {
+  const btn = document.querySelector(`[onclick*="${prefix.replace('-', '')}"]`) ||
+              document.querySelector(`[onclick*="do${cap(prefix)}"]`);
+  // handled per-function
+}
+
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+/* ────────────────────────────────────────
+   Document tracker
+──────────────────────────────────────── */
+const storedDocs = []; // { id, source }
+
+function addToTracker(id, source) {
+  storedDocs.push({ id, source });
+  renderTracker();
+}
+
+function removeFromTracker(id) {
+  const idx = storedDocs.findIndex(d => d.id === id);
+  if (idx !== -1) storedDocs.splice(idx, 1);
+  renderTracker();
+}
+
+function renderTracker() {
+  const list = document.getElementById('doc-list');
+  const empty = document.getElementById('doc-empty');
+  if (storedDocs.length === 0) {
+    list.innerHTML = '<div class="doc-empty" id="doc-empty">No documents ingested yet.</div>';
+    return;
+  }
+  list.innerHTML = storedDocs.map(d => `
+    <div class="doc-item">
+      <span class="doc-id">${d.id}</span>
+      <span class="doc-src">${d.source || '(no source)'}</span>
+      <button onclick="fillDeleteId('${d.id}')" title="Use this ID">→</button>
+    </div>
+  `).join('');
+}
+
+function fillDeleteId(id) {
+  document.getElementById('delete-id').value = id;
+  toast('Document ID copied to delete field');
+}
+
+/* ────────────────────────────────────────
+   1. Health
+──────────────────────────────────────── */
+async function checkHealth() {
+  try {
+    const r = await apiFetch('GET', '/health');
+    const dot = document.getElementById('status-dot');
+    dot.className = r.ok ? 'ok' : 'error';
+    return r.ok;
+  } catch {
+    document.getElementById('status-dot').className = 'error';
+    return false;
+  }
+}
+
+async function doHealth() {
+  try {
+    const r = await apiFetch('GET', '/health');
+    setResponse('health', r);
+    document.getElementById('status-dot').className = r.ok ? 'ok' : 'error';
+  } catch (e) {
+    setResponse('health', { ok: false, status: 0, data: { error: e.message }, ms: 0 });
+    document.getElementById('status-dot').className = 'error';
+  }
+}
+
+// Auto-ping on load
+window.addEventListener('load', () => { checkHealth(); });
+
+/* ────────────────────────────────────────
+   2. Chat
+──────────────────────────────────────── */
+function addMsgRow() {
+  const list = document.getElementById('chat-messages');
+  const row = document.createElement('div');
+  row.className = 'msg-row';
+  row.innerHTML = `
+    <select>
+      <option value="system">system</option>
+      <option value="user" selected>user</option>
+      <option value="assistant">assistant</option>
+    </select>
+    <textarea placeholder="Message content..."></textarea>
+    <button class="remove-msg" onclick="removeMsgRow(this)" title="Remove">×</button>
+  `;
+  list.appendChild(row);
+}
+
+function removeMsgRow(btn) {
+  const rows = document.querySelectorAll('#chat-messages .msg-row');
+  if (rows.length === 1) { toast('Need at least one message'); return; }
+  btn.closest('.msg-row').remove();
+}
+
+function resetChat() {
+  document.getElementById('chat-messages').innerHTML = `
+    <div class="msg-row">
+      <select><option value="system">system</option><option value="user" selected>user</option><option value="assistant">assistant</option></select>
+      <textarea placeholder="Type your message..."></textarea>
+      <button class="remove-msg" onclick="removeMsgRow(this)" title="Remove">×</button>
+    </div>`;
+  document.getElementById('chat-model').value = '';
+}
+
+function clearSession() {
+  document.getElementById('chat-session').value = '';
+  toast('New session — next message starts a fresh conversation');
+}
+
+async function doChat() {
+  const rows = document.querySelectorAll('#chat-messages .msg-row');
+  const messages = [];
+  rows.forEach(row => {
+    const role = row.querySelector('select').value;
+    const content = row.querySelector('textarea').value.trim();
+    if (content) messages.push({ role, content });
+  });
+  if (!messages.length) { toast('Add at least one message'); return; }
+
+  const model     = document.getElementById('chat-model').value.trim();
+  const sessionId = document.getElementById('chat-session').value.trim();
+  const stream    = document.getElementById('chat-stream').checked;
+
+  const body = { messages, stream };
+  if (model)     body.model      = model;
+  if (sessionId) body.session_id = sessionId;
+
+  const btn = document.querySelector('[onclick="doChat()"]');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Sending…';
+
+  const respEl   = document.getElementById('chat-resp');
+  const statusEl = document.getElementById('chat-status');
+  const timeEl   = document.getElementById('chat-time');
+  const t0 = Date.now();
+
+  try {
+    if (stream) {
+      // ── Streaming path ──────────────────────────────
+      respEl.className = 'response-body';
+      respEl.textContent = '';
+
+      const res = await fetch(serverUrl() + '/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      const dot = statusEl.querySelector('.dot');
+      const txt = statusEl.querySelector('span');
+      dot.className = 'dot ' + (res.ok ? 'ok' : 'error');
+      txt.textContent = res.ok ? '200 OK — streaming' : `${res.status} Error`;
+
+      const reader  = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText  = '';
+      let buffer    = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // keep incomplete last line
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.type === 'chunk') {
+              fullText += data.content;
+              respEl.textContent = fullText;
+              respEl.scrollTop = respEl.scrollHeight;
+            } else if (data.type === 'done') {
+              document.getElementById('chat-session').value = data.session_id;
+              respEl.textContent = fullText + `\n\n--- session: ${data.session_id}`;
+              timeEl.textContent = `${Date.now() - t0}ms`;
+              dot.className = 'dot ok';
+              txt.textContent = '200 OK — stream complete';
+            }
+          } catch {}
+        }
+      }
+
+    } else {
+      // ── Non-streaming path ───────────────────────────
+      const r = await apiFetch('POST', '/chat', body);
+      if (r.ok && r.data.content) {
+        const d = r.data;
+        if (d.session_id) document.getElementById('chat-session').value = d.session_id;
+        const pretty = `ANSWER:\n${d.content}\n\n---\nModel:    ${d.model}\nProvider: ${d.provider}\nTokens:   ${d.input_tokens} in / ${d.output_tokens} out\nSession:  ${d.session_id}${d.thinking ? '\n\nTHINKING:\n' + d.thinking : ''}`;
+        respEl.className = 'response-body';
+        respEl.textContent = pretty;
+        setStatusOnly('chat', r);
+      } else {
+        setResponse('chat', r);
+      }
+    }
+  } catch(e) {
+    setResponse('chat', { ok: false, status: 0, data: { error: e.message }, ms: 0 });
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '▶ Send';
+}
+
+function setStatusOnly(prefix, result) {
+  const statusEl = document.getElementById(prefix + '-status');
+  const timeEl   = document.getElementById(prefix + '-time');
+  const dot = statusEl.querySelector('.dot');
+  const txt = statusEl.querySelector('span');
+  dot.className = 'dot ' + (result.ok ? 'ok' : 'error');
+  txt.textContent = result.ok ? `${result.status} OK` : `${result.status} Error`;
+  timeEl.textContent = `${result.ms}ms`;
+}
+
+/* ────────────────────────────────────────
+   3. Ingest text
+──────────────────────────────────────── */
+async function doIngest() {
+  const content = document.getElementById('ingest-content').value.trim();
+  if (!content) { toast('Please enter some content'); return; }
+
+  const source = document.getElementById('ingest-source').value.trim();
+  let metadata = {};
+  const metaRaw = document.getElementById('ingest-meta').value.trim();
+  if (metaRaw) {
+    try { metadata = JSON.parse(metaRaw); }
+    catch { toast('Metadata must be valid JSON'); return; }
+  }
+
+  const btn = document.querySelector('[onclick="doIngest()"]');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Ingesting…';
+  try {
+    const r = await apiFetch('POST', '/ingest', { content, source, metadata });
+    setResponse('ingest', r);
+    if (r.ok && r.data.document_id) {
+      addToTracker(r.data.document_id, r.data.source);
+      toast('Ingested! Document ID saved to tracker.');
+    }
+  } catch(e) {
+    setResponse('ingest', { ok: false, status: 0, data: { error: e.message }, ms: 0 });
+  }
+  btn.disabled = false;
+  btn.innerHTML = '▶ Ingest Text';
+}
+
+/* ────────────────────────────────────────
+   4. Ingest file
+──────────────────────────────────────── */
+let selectedFile = null;
+
+function onFileSelect(e) {
+  selectedFile = e.target.files[0];
+  showFile();
+}
+function onDragOver(e) { e.preventDefault(); document.getElementById('dropzone').classList.add('dragover'); }
+function onDragLeave()  { document.getElementById('dropzone').classList.remove('dragover'); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropzone').classList.remove('dragover');
+  selectedFile = e.dataTransfer.files[0];
+  showFile();
+}
+function showFile() {
+  if (!selectedFile) return;
+  document.getElementById('file-name').textContent = `Selected: ${selectedFile.name} (${(selectedFile.size/1024).toFixed(1)} KB)`;
+  document.getElementById('upload-btn').disabled = false;
+}
+
+async function doIngestFile() {
+  if (!selectedFile) { toast('No file selected'); return; }
+  const form = new FormData();
+  form.append('file', selectedFile, selectedFile.name);
+
+  const btn = document.getElementById('upload-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Uploading…';
+  try {
+    const r = await apiFetch('POST', '/ingest/file', form, true);
+    setResponse('file', r);
+    if (r.ok && r.data.document_id) {
+      addToTracker(r.data.document_id, r.data.source);
+      toast('File ingested! Document ID saved to tracker.');
+    }
+  } catch(e) {
+    setResponse('file', { ok: false, status: 0, data: { error: e.message }, ms: 0 });
+  }
+  btn.disabled = false;
+  btn.innerHTML = '▶ Upload &amp; Ingest';
+}
+
+/* ────────────────────────────────────────
+   5. Query
+──────────────────────────────────────── */
+async function doQuery() {
+  const question = document.getElementById('query-q').value.trim();
+  if (!question) { toast('Please enter a question'); return; }
+  const k = parseInt(document.getElementById('query-k').value) || 5;
+
+  const btn = document.querySelector('[onclick="doQuery()"]');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Querying…';
+  try {
+    const r = await apiFetch('POST', '/query', { question, k });
+    if (r.ok && r.data.answer) {
+      const d = r.data;
+      const sources = (d.sources || []).map((s, i) =>
+        `Source ${i+1}: [score=${s.score?.toFixed(3)}, rank=${s.rank}]\n${s.chunk?.content?.slice(0,200)}…`
+      ).join('\n\n');
+      const pretty = `ANSWER:\n${d.answer}\n\n---\nModel:   ${d.model}\nTokens:  ${d.input_tokens} in / ${d.output_tokens} out\n\nSOURCES USED (top ${d.sources?.length || 0} of ${k} requested):\n\n${sources || '(none)'}`;
+      document.getElementById('query-resp').className = 'response-body';
+      document.getElementById('query-resp').textContent = pretty;
+      setStatusOnly('query', r);
+    } else {
+      setResponse('query', r);
+    }
+  } catch(e) {
+    setResponse('query', { ok: false, status: 0, data: { error: e.message }, ms: 0 });
+  }
+  btn.disabled = false;
+  btn.innerHTML = '▶ Ask';
+}
+
+/* ────────────────────────────────────────
+   6. Delete
+──────────────────────────────────────── */
+async function doDelete() {
+  const id = document.getElementById('delete-id').value.trim();
+  if (!id) { toast('Paste a document ID first'); return; }
+
+  const btn = document.querySelector('[onclick="doDelete()"]');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Deleting…';
+  try {
+    const r = await apiFetch('DELETE', `/documents/${id}`);
+    setResponse('delete', r);
+    if (r.ok) {
+      removeFromTracker(id);
+      toast('Document deleted from ChromaDB');
+    }
+  } catch(e) {
+    setResponse('delete', { ok: false, status: 0, data: { error: e.message }, ms: 0 });
+  }
+  btn.disabled = false;
+  btn.innerHTML = '▶ Delete Document';
+}
+</script>
+</body>
+</html>
