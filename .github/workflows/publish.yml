@@ -15,8 +15,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dev dependencies
-        run: pip install -e ".[dev]"
+      - name: Install dependencies
+        run: pip install -e ".[rag,api,dev]"
 
       - name: Run tests
         run: pytest tests/ -v
