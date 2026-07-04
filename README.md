@@ -8,7 +8,7 @@
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 ![Tests](https://img.shields.io/badge/Tests-25%20passing-brightgreen?style=flat-square)
 
-**Live demo → `<!-- ADD YOUR URL HERE AFTER DEPLOY -->`**
+**PyPI → [pypi.org/project/llmframe-rag](https://pypi.org/project/llmframe-rag/)**
 
 ---
 
