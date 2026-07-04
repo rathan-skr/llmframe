@@ -2,6 +2,7 @@
 
 > Production-grade RAG + multi-LLM framework — hybrid search, streaming, cross-encoder reranking, and a REST API. Built with Python, FastAPI, Claude, and ChromaDB.
 
+[![PyPI](https://img.shields.io/pypi/v/llmframe-rag?style=flat-square&color=blue)](https://pypi.org/project/llmframe-rag/)
 ![Python](https://img.shields.io/badge/Python-3.11%2B-blue?style=flat-square)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
@@ -112,7 +113,14 @@ flowchart TD
 ### 1 — Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/llmframe
+# Via pip
+pip install "llmframe-rag[all]"
+```
+
+Or from source:
+
+```bash
+git clone https://github.com/rathan-skr/llmframe
 cd llmframe
 pip install -e ".[all]"
 ```
@@ -151,7 +159,7 @@ Open **http://localhost:8000/docs** for the interactive Swagger UI.
 
 ```python
 import asyncio
-from src.llmframe import FrameworkConfig, AnthropicProvider, RAGPipeline
+from llmframe import FrameworkConfig, AnthropicProvider, RAGPipeline
 
 async def main():
     config = FrameworkConfig.from_env()
@@ -192,7 +200,7 @@ async for token in llm.stream([Message(role="user", content="Explain vector embe
 ### Swap Claude for GPT-4o
 
 ```python
-from src.llmframe import OpenAIProvider
+from llmframe import OpenAIProvider
 
 llm = OpenAIProvider(api_key=config.openai_api_key)
 rag = RAGPipeline(llm=llm, config=config)   # everything else unchanged

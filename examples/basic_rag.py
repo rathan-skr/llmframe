@@ -5,12 +5,8 @@ Run:
     python examples/basic_rag.py
 """
 import asyncio
-import sys
-import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
-from src.llmframe import FrameworkConfig, AnthropicProvider, RAGPipeline
+from llmframe import FrameworkConfig, AnthropicProvider, RAGPipeline
 
 SAMPLE = """
 FastAPI is a modern, fast web framework for building APIs with Python based on standard

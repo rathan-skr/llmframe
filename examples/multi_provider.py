@@ -5,13 +5,9 @@ Run:
     python examples/multi_provider.py
 """
 import asyncio
-import sys
-import os
 import time
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
-from src.llmframe import FrameworkConfig, AnthropicProvider, OpenAIProvider, Message
+from llmframe import FrameworkConfig, AnthropicProvider, OpenAIProvider, Message
 
 
 async def ask(provider, question: str):

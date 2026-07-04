@@ -3,11 +3,32 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "llmframe"
+name = "llmframe-rag"
 version = "0.1.0"
-description = "Production-grade RAG + multi-LLM framework"
+description = "Production-grade RAG + multi-LLM framework — hybrid search, streaming, cross-encoder reranking, and a REST API"
 readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "rathan-skr", email = "skugarathan2@gmail.com" },
+]
+keywords = [
+    "rag", "llm", "ai", "anthropic", "openai", "chatbot",
+    "vector-search", "fastapi", "hybrid-search", "reranking",
+    "chromadb", "embeddings", "claude",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Framework :: FastAPI",
+    "Operating System :: OS Independent",
+]
 dependencies = [
     "anthropic>=0.40.0",
     "openai>=1.50.0",
@@ -30,13 +51,21 @@ local = [
     "sentence-transformers>=3.0.0",
     "rank-bm25>=0.2.2",
 ]
-all = ["llmframe[rag,api]"]
+all = ["llmframe-rag[rag,api,local]"]
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
     "httpx>=0.27.0",
     "ruff>=0.6.0",
+    "build>=1.0.0",
+    "twine>=5.0.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/rathan-skr/llmframe"
+Documentation = "https://github.com/rathan-skr/llmframe#readme"
+Repository = "https://github.com/rathan-skr/llmframe"
+Issues = "https://github.com/rathan-skr/llmframe/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/llmframe"]
