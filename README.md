@@ -53,6 +53,60 @@ Query
 
 ---
 
+## How it works
+
+### Ingest — storing a document
+
+```mermaid
+flowchart TD
+    A([Your text or PDF]) --> B[POST /ingest\nFastAPI — validates API key]
+    B --> C[TextChunker\nsplit into 1 000-char overlapping pieces]
+    C --> D[EmbeddingProvider\nconvert each chunk to a vector]
+    D --> E[(ChromaDB\npersist text + vectors to disk)]
+    E --> F([document_id returned])
+```
+
+> **Why overlapping chunks?** If a sentence spans a split boundary, both neighbours share it — so no meaning is lost at the edge.
+
+---
+
+### Query — answering a question
+
+```mermaid
+flowchart TD
+    A([Your question]) --> B[POST /query\nFastAPI — validates API key]
+    B --> C[EmbeddingProvider\nquestion → vector]
+    C --> D[ChromaDB\nvector search — semantic match]
+    C -.->|optional| E[BM25 index\nkeyword search — exact match]
+    D --> F[RRF Fusion\nmerge both ranked lists]
+    E -.->|optional| F
+    F -.->|optional| G[Cross-encoder reranker\nscore every question+chunk pair directly]
+    G --> H[Build context prompt\njoin top-k chunks with source labels]
+    H --> I[Claude Opus 4.8\nadaptive thinking enabled]
+    I --> J([Grounded answer + sources + token counts])
+```
+
+> **Dashed arrows** = optional stages, toggled by `HYBRID_SEARCH_ENABLED` and `RERANKER_ENABLED` in `.env`.  
+> **Why two retrieval methods?** Vector search finds semantically similar text. BM25 finds exact keywords. Together they cover cases either one misses.
+
+---
+
+### Chat — multi-turn conversation
+
+```mermaid
+flowchart TD
+    A([Your message]) --> B[POST /chat\nFastAPI — validates API key]
+    B --> C[ConversationStore\nload history for this session_id]
+    C --> D[Build message list\nsystem prompt + history + new message]
+    D --> E[Claude Opus 4.8\nstream or wait for full reply]
+    E --> F[ConversationStore\nsave this turn to session]
+    F --> G([Answer + session_id returned])
+```
+
+> **No session_id on first call?** The server creates one and returns it. Pass it back on every follow-up message so Claude sees the full conversation.
+
+---
+
 ## Quickstart
 
 ### 1 — Install
