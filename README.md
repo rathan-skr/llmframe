@@ -127,11 +127,7 @@ pip install -e ".[all]"
 
 ### 2 — Configure
 
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and add your keys:
+Create a `.env` file in your project folder:
 
 ```env
 ANTHROPIC_API_KEY=sk-ant-...
@@ -142,10 +138,10 @@ API_SECRET_KEY=choose-a-secret
 ### 3 — Run
 
 ```bash
-# Local dev server
-uvicorn src.llmframe.api.app:app --reload
+# REST API server
+uvicorn llmframe.api.app:app --reload
 
-# Or with Docker
+# Or with Docker (from source clone only)
 docker compose up
 ```
 
@@ -155,14 +151,18 @@ Open **http://localhost:8000/docs** for the interactive Swagger UI.
 
 ## Usage
 
-### Python library
+llmframe-rag gives you two ways to use it: as a **Python library** you import directly, or as a **REST API server** your frontend or other services call.
+
+---
+
+### Mode 1 — Python library (import directly)
 
 ```python
 import asyncio
 from llmframe import FrameworkConfig, AnthropicProvider, RAGPipeline
 
 async def main():
-    config = FrameworkConfig.from_env()
+    config = FrameworkConfig.from_env()          # reads your .env file
     llm    = AnthropicProvider(api_key=config.anthropic_api_key)
     rag    = RAGPipeline(llm=llm, config=config)
 
@@ -175,11 +175,12 @@ async def main():
     # Ask a question
     result = await rag.query("What risk levels does the EU AI Act define?")
     print(result.answer)
+    print(f"Sources: {[s.chunk.metadata['source'] for s in result.sources]}")
 
 asyncio.run(main())
 ```
 
-**Example output:**
+**Output:**
 ```
 The EU AI Act defines four risk levels:
 1. Unacceptable risk — prohibited systems (e.g. social scoring)
@@ -187,15 +188,38 @@ The EU AI Act defines four risk levels:
 3. Limited risk — transparency obligations apply
 4. Minimal risk — no obligations (e.g. spam filters)
 
-Source: eu-ai-act-summary.txt
+Sources: ['eu-ai-act-summary.txt']
 ```
 
-### Streaming
+---
 
-```python
-async for token in llm.stream([Message(role="user", content="Explain vector embeddings.")]):
-    print(token, end="", flush=True)
+### Mode 2 — REST API server
+
+Start the server:
+
+```bash
+uvicorn llmframe.api.app:app --reload
 ```
+
+Then call it from anywhere (curl, your frontend, another service):
+
+```bash
+# Ingest a document
+curl -X POST http://localhost:8000/ingest \
+  -H "X-API-Key: your-secret" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Your document text...", "source": "doc.txt"}'
+
+# Ask a question
+curl -X POST http://localhost:8000/query \
+  -H "X-API-Key: your-secret" \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What does the document say?"}'
+```
+
+Interactive docs: **http://localhost:8000/docs**
+
+---
 
 ### Swap Claude for GPT-4o
 
@@ -204,6 +228,16 @@ from llmframe import OpenAIProvider
 
 llm = OpenAIProvider(api_key=config.openai_api_key)
 rag = RAGPipeline(llm=llm, config=config)   # everything else unchanged
+```
+
+### Streaming tokens
+
+```python
+from llmframe import AnthropicProvider, Message
+
+provider = AnthropicProvider(api_key=config.anthropic_api_key)
+async for token in provider.stream([Message(role="user", content="Explain vector embeddings.")]):
+    print(token, end="", flush=True)
 ```
 
 ### Ingest a PDF
@@ -222,6 +256,69 @@ RERANKER_ENABLED=true
 ```
 
 No code changes needed — the pipeline picks up the config automatically.
+
+---
+
+## Build your own app on top of llmframe-rag
+
+llmframe-rag is a **framework**, not a finished app. Like Django provides the ORM and routing so you build your own website on top, llmframe-rag provides the RAG pipeline and LLM abstraction so you build your own AI app on top.
+
+### Plug in your own vector store (e.g. Pinecone)
+
+```python
+from llmframe.rag.vectorstore import BaseVectorStore
+from llmframe import RAGPipeline, AnthropicProvider, FrameworkConfig
+
+class PineconeVectorStore(BaseVectorStore):
+    def __init__(self, api_key: str, index: str):
+        import pinecone
+        self.index = pinecone.Index(index, api_key=api_key)
+
+    async def add(self, chunks):
+        # your Pinecone upsert logic
+        ...
+
+    async def search(self, embedding, k):
+        # your Pinecone query logic
+        ...
+
+    async def delete_by_document(self, document_id):
+        ...
+
+config = FrameworkConfig.from_env()
+llm    = AnthropicProvider(api_key=config.anthropic_api_key)
+store  = PineconeVectorStore(api_key="...", index="my-index")
+
+# Your custom store, the framework's pipeline — zero retrieval code written
+rag = RAGPipeline(llm=llm, config=config, vector_store=store)
+```
+
+### Plug in your own LLM (e.g. Ollama, Gemini)
+
+```python
+from llmframe.providers.base import BaseLLMProvider
+from llmframe import RAGPipeline, FrameworkConfig
+
+class OllamaProvider(BaseLLMProvider):
+    async def chat(self, messages):
+        # call Ollama's local API
+        ...
+
+    async def stream(self, messages):
+        # stream tokens from Ollama
+        ...
+
+rag = RAGPipeline(llm=OllamaProvider(), config=FrameworkConfig.from_env())
+```
+
+### What you can build
+
+| App | What you add | What the framework handles |
+|---|---|---|
+| Legal document bot | Your PDF ingestion logic | Chunking, embedding, retrieval, Claude |
+| Customer support chatbot | Your product docs, your frontend | RAG pipeline, conversation memory, API |
+| Internal knowledge base | Your company docs | Hybrid search, reranking, streaming |
+| Medical Q&A tool | Domain-specific prompts | Multi-LLM abstraction, vector store |
 
 ---
 
